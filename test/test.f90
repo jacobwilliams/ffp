@@ -11,12 +11,12 @@ program test
 !		Ivomar B. Soares - ivomarbrito@uol.com.br
 !
 !	Disclaimer:
-!		This code is provided "as is" no warranty. It should not be used for 
-!       commercial use. Any change in the code is of entirely responsability 
+!		This code is provided "as is" no warranty. It should not be used for
+!       commercial use. Any change in the code is of entirely responsability
 !       of the user.
 !
 !   For Future Version:
-!       Send me (wiltonps@uol.com.br) your email with message "about parser". 
+!       Send me (wiltonps@uol.com.br) your email with message "about parser".
 !
 !
 use interpreter
@@ -29,7 +29,7 @@ real(realkind),       dimension(6) :: variablesvalues
 !String variable that will store the function that the evaluator will build
 character (len = 275)  :: func
 
-!String variable that will return the building of the expression result 
+!String variable that will return the building of the expression result
 !If everything was ok then statusflag = 'ok', otherwise statusflag = 'error'
 character (len = 5)  :: statusflag
 
@@ -59,7 +59,7 @@ variablesvalues(6) = b
 
 
 
-!First Expression																					 
+!First Expression
 !*****************************************************************************************************
 !*****************************************************************************************************
 !*****************************************************************************************************
@@ -71,7 +71,7 @@ write(*,*) '(x+y+z+x*y+x*z+y*z+x/y+x/z+y/z+x*cos(x)+y*sin(y)+z*tan(z)*2/&
 			log10(sqrt(x*2+y*2+z*2)+x+y+z))*x1'
 
 write(*,*)' '
-write(*,*) 'Variables Values: x = 0.175, y = 0.110, z = 0.900, x1 = 0.508' 
+write(*,*) 'Variables Values: x = 0.175, y = 0.110, z = 0.900, x1 = 0.508'
 write(*,*)' '
 
 !
@@ -87,7 +87,9 @@ elapsedtime = timef()
 
 !Five millions iterations
 do i = 1, 5000000
-	answer = (x+y+z+x*y+x*z+y*z+x/y+x/z+y/z+x*cos(x)+y*sin(y)+z*tan(z)*2/(x+y+z+x*y+x*z+y*z+x/y+x/z+y/z+x*cos(x)+y*sin(y)+z*tan(z))*3+sqrt(x*y*z+x+y+z)*log10(sqrt(x*2+y*2+z*2)+x+y+z))
+	answer = (x+y+z+x*y+x*z+y*z+x/y+x/z+y/z+x*cos(x)+y*sin(y)+z*tan(z)*2/&
+           (x+y+z+x*y+x*z+y*z+x/y+x/z+y/z+x*cos(x)+y*sin(y)+z*tan(z))*3+&
+           sqrt(x*y*z+x+y+z)*log10(sqrt(x*2+y*2+z*2)+x+y+z))
 end do
 
 elapsedtime = timef()
@@ -98,7 +100,9 @@ write(*,*)' '
 !Evaluator Calculation
 !
 !String: Function to be evaluated
-func =	'(x+y+z+x*y+x*z+y*z+x/y+x/z+y/z+x*cos(x)+y*sin(y)+z*tan(z)*2/(x+y+z+x*y+x*z+y*z+x/y+x/z+y/z+x*cos(x)+y*sin(y)+z*tan(z))*3+sqrt(x*y*z+x+y+z)*log10(sqrt(x*2+y*2+z*2)+x+y+z))'
+func =	'(x+y+z+x*y+x*z+y*z+x/y+x/z+y/z+x*cos(x)+y*sin(y)+z*tan(z)*2/'//&
+        '(x+y+z+x*y+x*z+y*z+x/y+x/z+y/z+x*cos(x)+y*sin(y)+z*tan(z))*3+'//&
+        'sqrt(x*y*z+x+y+z)*log10(sqrt(x*2+y*2+z*2)+x+y+z))'
 
 !Initialize function
 call init (func, variables, statusflag)
@@ -136,7 +140,7 @@ write(*,*)
 
 
 
-!Second Expression																					 
+!Second Expression
 !*****************************************************************************************************
 !*****************************************************************************************************
 !*****************************************************************************************************
@@ -145,7 +149,7 @@ write(*,*) '====== =========='
 write(*,*) 'a+b*x1'
 
 write(*,*)' '
-write(*,*) 'Variables Values: a = 0.500, b = 0.750, x1 = 0.508' 
+write(*,*) 'Variables Values: a = 0.500, b = 0.750, x1 = 0.508'
 write(*,*)' '
 
 !
@@ -191,5 +195,12 @@ end if
 !*****************************************************************************************************
 !*****************************************************************************************************
 
+contains
+  real(realkind) function timef()
+  implicit none
+  integer :: icount
+  call system_clock(icount)
+  timef = icount
+  end function timef
 
 end program

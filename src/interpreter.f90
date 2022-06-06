@@ -1,23 +1,23 @@
 module precision
 	!Precision:
 	!All real variables defaulted to double precision
-	integer, parameter	 :: realkind = selected_real_kind(p=13,r=200)		
+	integer, parameter	 :: realkind = selected_real_kind(p=13,r=200)
 end module precision
 
 
 module interpreter
 	!
-	!	This module interprets the function, builds it to be evaluated 
+	!	This module interprets the function, builds it to be evaluated
 	!	next
 	!
-	use precision 
+	use precision
 	implicit none
 
-	character(len=10),   dimension(:), allocatable, private :: varnames	
+	character(len=10),   dimension(:), allocatable, private :: varnames
 	character(len=255),  dimension(:), allocatable, private	:: stokens
 	integer			  ,	 dimension(:), allocatable, private	:: operations
-	integer,										private	:: n 
-	integer,										private	:: ntokens = 0	
+	integer,										private	:: n
+	integer,										private	:: ntokens = 0
 	character,           dimension(:), pointer,		private :: opaddsub			!Operador
 	integer,										private	:: isaddsub = 1
 	character,           dimension(:), pointer,		private :: opmuldiv			!Operador
@@ -34,11 +34,11 @@ contains
 
 	subroutine init (func, variablenames, statusflag)
 	!
-	!	 This subroutine shifts	all characters of the function 
+	!	 This subroutine shifts	all characters of the function
 	!	 expression to lowercase and converts exponents signals ** to ^
 	!
 	character(len=*),                intent(inout)		:: func
-	character(len=10), dimension(:), intent(inout)	    :: variablenames	
+	character(len=10), dimension(:), intent(inout)	    :: variablenames
 	character(len=26)									:: lower = 'abcdefghijklmnopqrstuvwxyz'
 	character(len=26)									:: upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 	integer												:: i, k, funclen
@@ -47,12 +47,12 @@ contains
     !detects errors
 	call identifica(func)
     call convert_b(func)
-    
+
 
 	!Shift all characters to lowercase and converts ** to ^
 	funclen = len_trim(func)
 	do i = 1, funclen
-		k = index(upper,func(i:i)) 
+		k = index(upper,func(i:i))
 		if ( k /= 0) then
 			func(i:i) = lower(k:k)
 		end if
@@ -67,14 +67,14 @@ contains
 
 
 	end subroutine init
-	
-	!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!		
+
+	!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 	subroutine recog_variables (func, variablenames)
 	!
 	!	This subroutine recognizes the variables and set their values
 	!
-	character(len=10), dimension(:), intent(in)	    :: variablenames	
+	character(len=10), dimension(:), intent(in)	    :: variablenames
 	character(len=*), intent(inout)					:: func
 
 	n = size(variablenames)
@@ -84,7 +84,7 @@ contains
 
 	end subroutine recog_variables
 
-	!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!		
+	!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 	subroutine tokens_analyzer (func)
 	!
@@ -94,15 +94,15 @@ contains
 	character(len=11)								:: numbers = '.0123456789'
 	character(len=26)								:: chars = 'abcdefghijklmnopqrstuvwxyz'
 	character(len=7)								:: operators = '+-*/^()'
-	integer											:: k = 1, i = 1 
-	integer											:: irightbrackets = 1, ileftbrackets = 1 
-	logical											:: status = .true. 
+	integer											:: k = 1, i = 1
+	integer											:: irightbrackets = 1, ileftbrackets = 1
+	logical											:: status = .true.
 
 	k = 1
 	i = 1
 	irightbrackets = 1
-	ileftbrackets = 1 
-	ntokens = 0	
+	ileftbrackets = 1
+	ntokens = 0
 	status = .true.
 
 	do while (k <= len_trim(func))
@@ -118,7 +118,7 @@ contains
 				end if
 			end do
 				ntokens = ntokens + 1
-		
+
 		!It's a number
 		else if (index(numbers,func(k:k)) /= 0) then
 			status = .true.
@@ -135,13 +135,13 @@ contains
 				end if
 			end do
 			ntokens = ntokens + 1
-			
+
 		!It's an operator or delimitator
-		else 
+		else
 			k = k + 1
 			ntokens = ntokens + 1
-		end if		
-	end do 
+		end if
+	end do
 
 	allocate(stokens(ntokens))
 
@@ -163,7 +163,7 @@ contains
 					i = i + 1
 				end if
 			end do
-				
+
 		!It's a number
 		else if (index(numbers,func(k:k)) /= 0) then
 			stokens(i) = func(k:k)
@@ -183,25 +183,25 @@ contains
 					end if
 				end if
 			end do
-			
+
 		!It's an operator or delimitator
-		else 
+		else
 			stokens(i) = func(k:k)
 			if(stokens(i) == '(')then
 				irightbrackets = irightbrackets + 1
 			else if(stokens(i) == ')') then
 				ileftbrackets = ileftbrackets + 1
-			end if			
+			end if
 			i = i + 1
 			k = k + 1
-		end if		
-	end do 
+		end if
+	end do
 
 	if (irightbrackets /= ileftbrackets) then
 		statusflagparser = 'error'
 		return
 	end if
-		
+
 	itoke = 1
 	isaddsub = 1
 	ismuldiv = 1
@@ -218,33 +218,33 @@ contains
 	ioperations = ioperations - 1
 
 	end subroutine tokens_analyzer
-	
+
 	!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	!The following subroutines call themselves recursively
 	!to build the expression to be parsed based on an algorithm
 	!called Recursive Descendent Parsing
 	!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	
+
 	subroutine add_sub ()
 	!
 	! Enter description here
-	!	
-		
+	!
+
 	call mul_div ()
 
-	do while (trim(toke) == '+' .or. trim(toke) == '-') 
+	do while (trim(toke) == '+' .or. trim(toke) == '-')
 		opaddsub(isaddsub) = trim(toke)
 		isaddsub = isaddsub + 1
 		itoke = itoke + 1
 		toke = stokens(itoke)
 		call mul_div()
-			
+
 		selectcase(opaddsub(isaddsub-1))
 		case('+')
 			isaddsub = isaddsub - 1
 			operations(ioperations) = 3
 			ioperations = ioperations + 1
-		
+
 		case('-')
 			isaddsub = isaddsub - 1
 			operations(ioperations) = 4
@@ -261,7 +261,7 @@ contains
 
 	call unary()
 
-	do while (trim(toke) == '*' .or. trim(toke) == '/') 
+	do while (trim(toke) == '*' .or. trim(toke) == '/')
 		opmuldiv(ismuldiv) = trim(toke)
 		ismuldiv = ismuldiv + 1
 		itoke = itoke + 1
@@ -270,9 +270,9 @@ contains
 
 		selectcase(opmuldiv(ismuldiv-1))
 		case('*')
-			ismuldiv = ismuldiv - 1	
+			ismuldiv = ismuldiv - 1
 			operations(ioperations) = 5
-			ioperations = ioperations + 1	
+			ioperations = ioperations + 1
 		case('/')
 			ismuldiv = ismuldiv - 1
 			operations(ioperations) = 6
@@ -281,12 +281,12 @@ contains
 	end do
 
 	end subroutine mul_div
-	
+
 	subroutine unary()
 	!
 	! Enter description here
 	!
-	
+
 	if (trim(toke) == '-') then
 		itoke = itoke + 1
 		toke = stokens(itoke)
@@ -323,70 +323,70 @@ contains
 	subroutine functions ()
 	!
 	! Enter description here
-	!	
+	!
 	if (trim(toke) == 'sin') then
 		itoke = itoke + 1
 		toke = stokens(itoke)
 		call brackets()
 		operations(ioperations) = 8
 		ioperations = ioperations + 1
-		
+
 	else if(trim(toke) == 'cos') then
 		itoke = itoke + 1
 		toke = stokens(itoke)
 		call brackets()
 		operations(ioperations) = 9
 		ioperations = ioperations + 1
-	
+
 	else if(trim(toke) == 'tan') then
 		itoke = itoke + 1
 		toke = stokens(itoke)
 		call brackets()
 		operations(ioperations) = 10
 		ioperations = ioperations + 1
-		
+
 	else if(trim(toke) == 'asin') then
 		itoke = itoke + 1
 		toke = stokens(itoke)
 		call brackets()
 		operations(ioperations) = 11
 		ioperations = ioperations + 1
-		
+
 	else if(trim(toke) == 'acos') then
 		itoke = itoke + 1
 		toke = stokens(itoke)
 		call brackets()
 		operations(ioperations) = 12
 		ioperations = ioperations + 1
-		
+
 	else if(trim(toke) == 'atan') then
 		itoke = itoke + 1
 		toke = stokens(itoke)
 		call brackets()
 		operations(ioperations) = 13
 		ioperations = ioperations + 1
-		
+
 	else if(trim(toke) == 'sinh') then
 		itoke = itoke + 1
 		toke = stokens(itoke)
 		call brackets()
 		operations(ioperations) = 14
 		ioperations = ioperations + 1
-	
+
 	else if(trim(toke) == 'cosh') then
 		itoke = itoke + 1
 		toke = stokens(itoke)
-		call brackets()		
+		call brackets()
 		operations(ioperations) = 15
 		ioperations = ioperations + 1
-		
+
 	else if(trim(toke) == 'tanh') then
 		itoke = itoke + 1
 		toke = stokens(itoke)
 		call brackets()
 		operations(ioperations) = 16
 		ioperations = ioperations + 1
-		
+
 	else if(trim(toke) == 'sind') then
 		itoke = itoke + 1
 		toke = stokens(itoke)
@@ -400,80 +400,80 @@ contains
 		call brackets()
 		operations(ioperations) = 18
 		ioperations = ioperations + 1
-		
+
 	else if(trim(toke) == 'tand') then
 		itoke = itoke + 1
 		toke = stokens(itoke)
-		call brackets()		
+		call brackets()
 		operations(ioperations) = 19
 		ioperations = ioperations + 1
-		
+
 	else if (trim(toke) == 'log') then
 		itoke = itoke + 1
 		toke = stokens(itoke)
 		call brackets()
 		operations(ioperations) = 20
 		ioperations = ioperations + 1
-		
+
 	else if (trim(toke) == 'log10') then
 		itoke = itoke + 1
 		toke = stokens(itoke)
 		call brackets()
 		operations(ioperations) = 21
 		ioperations = ioperations + 1
-		
+
 	else if (trim(toke) == 'nint') then
 		itoke = itoke + 1
 		toke = stokens(itoke)
 		call brackets()
 		operations(ioperations) = 22
 		ioperations = ioperations + 1
-		
+
 	else if (trim(toke) == 'anint') then
 		itoke = itoke + 1
 		toke = stokens(itoke)
 		call brackets()
 		operations(ioperations) = 23
 		ioperations = ioperations + 1
-		
+
 	else if (trim(toke) == 'aint') then
 		itoke = itoke + 1
 		toke = stokens(itoke)
 		call brackets()
 		operations(ioperations) = 24
 		ioperations = ioperations + 1
-		
+
 	else if (trim(toke) == 'exp') then
 		itoke = itoke + 1
 		toke = stokens(itoke)
 		call brackets()
 		operations(ioperations) = 25
 		ioperations = ioperations + 1
-		
+
 	else if (trim(toke) == 'sqrt') then
 		itoke = itoke + 1
 		toke = stokens(itoke)
 		call brackets()
 		operations(ioperations) = 26
 		ioperations = ioperations + 1
-		
+
 	else if (trim(toke) == 'abs') then
 		itoke = itoke + 1
 		toke = stokens(itoke)
 		call brackets()
 		operations(ioperations) = 27
 		ioperations = ioperations + 1
-		
+
 	else if (trim(toke) == 'floor') then
 		itoke = itoke + 1
 		toke = stokens(itoke)
 		call brackets()
 		operations(ioperations) = 28
 		ioperations = ioperations + 1
-		
+
 	else
 		call brackets()
-		
+
 	end if
 
 	end subroutine functions
@@ -489,7 +489,7 @@ contains
 		if (trim(toke) /= ')') then
 			statusflagparser =  'error'
 			return
-		end if					
+		end if
 		if (itoke < ntokens) then
 			itoke = itoke + 1
 			toke = stokens(itoke)
@@ -497,7 +497,7 @@ contains
 		if (trim(toke) == '(') then
 			statusflagparser =  'error'
 			return
-		end if	
+		end if
 	else
 		call recog_vars ()
 	end if
@@ -508,17 +508,17 @@ contains
 	!
 	! Enter description here
 	!
-		
+
 	integer										:: i
 	integer										:: ierror
 	character(len=7)							:: operators = '+-*/^()'
-	
+
 	!Expression has an error
 	if (index(operators, trim(toke)) /= 0) then
 		statusflagparser = 'error'
-		return	
-	end if 
-	
+		return
+	end if
+
 	do i = 1, n
 		!It's a variable
 		if (trim(toke) == varnames(i)) then
@@ -530,7 +530,7 @@ contains
 			end if
 			return
 		end if
-	end do	
+	end do
 
 	!It's a number
 	toke = trim(toke)
@@ -547,7 +547,7 @@ contains
 		end if
 		numberk = numberk + 1
 	end if
-			 
+
    end subroutine recog_vars
 
 
@@ -560,12 +560,12 @@ contains
 	real(kind = realkind)							 :: answer
 	integer											 :: st = 0
 	integer											 :: dt = 1
-	integer											 :: i 	
+	integer											 :: i
 
 	st = 0
 	dt = 1
 
-	do i = 1, ioperations 
+	do i = 1, ioperations
 	select case(operations(i))
 		case (1)
 			st = st + 1
@@ -575,16 +575,16 @@ contains
 			pdata(st) =	- pdata(st)
 		case (3)
 			pdata(st-1) = pdata(st-1) + pdata(st)
-			st = st - 1 
+			st = st - 1
 		case (4)
 			pdata(st-1) = pdata(st-1) - pdata(st)
-			st = st - 1 
+			st = st - 1
 		case (5)
 			pdata(st-1) = pdata(st-1) * pdata(st)
-			st = st - 1 
+			st = st - 1
 		case (6)
 			pdata(st-1) = pdata(st-1) / pdata(st)
-			st = st - 1 
+			st = st - 1
 		case (7)
 			pdata(st-1) = pdata(st-1) ** pdata(st)
 			st = st - 1
@@ -650,42 +650,42 @@ contains
 	real(kind = realkind)							 :: answer
 	integer											 :: st = 0
 	integer											 :: dt = 1
-	integer											 :: i 	
+	integer											 :: i
 
 	st = 0
 	dt = 1
 
-	do i = 1, ioperations 
+	do i = 1, ioperations
 	select case(operations(i))
-		
+
 		case (1)
 			st = st + 1
 			pdata(st) = number(dt)
 			dt = dt + 1
-		
+
 		case (2)
 			pdata(st) =	- pdata(st)
-		
+
 		case (3)
 			pdata(st-1) = pdata(st-1) + pdata(st)
-			st = st - 1 
-		
+			st = st - 1
+
 		case (4)
 			pdata(st-1) = pdata(st-1) - pdata(st)
-			st = st - 1 
-		
+			st = st - 1
+
 		case (5)
 			pdata(st-1) = pdata(st-1) * pdata(st)
-			st = st - 1 
-		
+			st = st - 1
+
 		case (6)
 		    if(abs(pdata(st)) < 1.0e-30) then
 			 answer = -7.093987e-35
 			 return
 			end if
 			pdata(st-1) = pdata(st-1) / pdata(st)
-			st = st - 1 
-		
+			st = st - 1
+
 		case (7)
 		    if(pdata(st-1) < 0.0 .AND. (pdata(st)-int(pdata(st))) /= 0.0) then
 			 answer = -7.093987e-35
@@ -697,13 +697,13 @@ contains
 			end if
 			pdata(st-1) = pdata(st-1) ** pdata(st)
 			st = st - 1
-		
+
 		case (8)
 			pdata(st) = sin(pdata(st))
-		
+
 		case (9)
 			pdata(st) = cos(pdata(st))
-		
+
 		case (10)
 		    if((abs(pdata(st)) > 89.99*3.141593/180. .and. abs(pdata(st)) < 90.01*3.141593/180)&
 			.or. (abs(pdata(st)) > 269.99*3.141593/180. .and. abs(pdata(st)) < 270.01*3.141593/180)) then
@@ -711,103 +711,103 @@ contains
 			 return
 			end if
 			pdata(st) = tan(pdata(st))
-		
+
 		case (11)
 		    if(abs(pdata(st)) > 1.0) then
 			 answer = -7.093987e-35
 			 return
 			end if
 			pdata(st) = asin(pdata(st))
-		
+
 		case (12)
 		    if(abs(pdata(st)) > 1.0) then
 			 answer = -7.093987e-35
 			 return
 			end if
 			pdata(st) = acos(pdata(st))
-		
+
 		case (13)
 		    if(abs(pdata(st)) > 1.0e+10) then
 			 answer = -7.093987e-35
 			 return
 			end if
 			pdata(st) = atan(pdata(st))
-		
+
 		case (14)
 		    if(pdata(st) > 60) then
 			 answer = -7.093987e-35
 			 return
 			end if
 		    pdata(st) = sinh(pdata(st))
-		
+
 		case (15)
 		    if(pdata(st) > 60) then
 			 answer = -7.093987e-35
 			 return
 			end if
 			pdata(st) = cosh(pdata(st))
-	
+
 		case (16)
 			pdata(st) = tanh(pdata(st))
-	
+
 		case (17)
 			pdata(st) = sind(pdata(st))
-	
+
 		case (18)
 			pdata(st) = cosd(pdata(st))
-	
+
 		case (19)
 			pdata(st) = tand(pdata(st))
-	
+
 		case (20)
 		    if(pdata(st) <= 1.0e-15) then
 			 answer = -7.093987e-35
 			 return
 			end if
 			pdata(st) = log(pdata(st))
-	
+
 		case (21)
 		    if(pdata(st) <= 1.0e-15) then
 			 answer = -7.093987e-35
 			 return
 			end if
 			pdata(st) = log10(pdata(st))
-	
+
 		case (22)
 			pdata(st) = nint(pdata(st))
-	
+
 		case (23)
 			pdata(st) = anint(pdata(st))
-	
+
 		case (24)
 			pdata(st) = aint(pdata(st))
-	
+
 		case (25)
 		    if(pdata(st) > 55) then
 			 answer = -7.093987e-35
 			 return
 			end if
 			pdata(st) = exp(pdata(st))
-	
+
 		case (26)
 		    if(pdata(st) < 0) then
 			 answer = -7.093987e-35
 			 return
 			end if
 			pdata(st) = sqrt(pdata(st))
-	
+
 		case (27)
 			pdata(st) = abs(pdata(st))
-	
+
 		case (28)
 			pdata(st) = floor(pdata(st))
-	
+
 		case default
 			st = st + 1
 			pdata(st) = vars(operations(i)-28)
-	
+
 		end select
-	
+
         if(abs(pdata(st)) > 1.0d+60) then
 			 answer = -7.093987e-35
 			 return
@@ -821,7 +821,7 @@ contains
 
 
 	subroutine destroyfunc()
-	
+
 	if (allocated(stokens)) then
 		deallocate(stokens)
 	end if
@@ -847,7 +847,7 @@ contains
 
 	end subroutine destroyfunc
 
-	!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!		
+	!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 	recursive subroutine blanks(func)
 	!
@@ -855,14 +855,14 @@ contains
 	!
 	character(len=*), intent(inout)		:: func
 	integer								:: k
-	
+
 	func = adjustl(func)
 	k = index(trim(func), ' ')
 	if (k /= 0) then
 		func = func(:k-1) // func(k+1:)
 		call blanks(func)
 	end if
-	
+
 	end subroutine blanks
 
 end module interpreter
@@ -937,8 +937,10 @@ if(trim(funcao) == 'erro') return
 
 do i = 1, nchar-1
   do j = 1, 36
-    if(funcao(i:i) == '0' .or. funcao(i:i) == 'n' .or. funcao(i:i) == 's' .or. funcao(i:i) == 'h' .or. funcao(i:i) == 'd' .or. funcao(i:i) == 'g' .or. funcao(i:i) == 't' .or. funcao(i:i) == 'p' .or. funcao(i:i) == 'r') then
-      !não testa, pode ser uma das funções definidas
+    if(funcao(i:i) == '0' .or. funcao(i:i) == 'n' .or. funcao(i:i) == 's' .or. &
+	   funcao(i:i) == 'h' .or. funcao(i:i) == 'd' .or. funcao(i:i) == 'g' .or. &
+	   funcao(i:i) == 't' .or. funcao(i:i) == 'p' .or. funcao(i:i) == 'r') then
+      !nï¿½o testa, pode ser uma das funï¿½ï¿½es definidas
 	else
       if(funcao(i:i+1) == variav(j:j)//'(') funcao = 'erro'
     end if
@@ -1362,49 +1364,49 @@ ilength = len(trim(text))
  if(ilength > 1) then
 
   do k = 1,(ilength-1)
-   
-   !converte ^ em **, caso o usuário digite ^
+
+   !convert ^ to **
    if(text(k:k) == '^') then
     text = text(1:k-1)//'**'//text(k+1:ilength)
 	ilength = ilength + 1
 	item = 1
    end if
 
-   !converte ln em log
+   !convert ln to log
    if(text(k:k+1) == 'ln' .or. text(k:k+1) == 'Ln' .or.text(k:k+1) == 'lN' .or.text(k:k+1) == 'LN') then
     text = text(1:k-1)//'log'//text(k+2:ilength)
 	ilength = ilength + 1
 	item = 1
    end if
 
-   !converte pi em 3.14159
+   !convert pi to 3.14159
    if(text(k:k+1) == 'pi' .or. text(k:k+1) == 'Pi' .or. text(k:k+1) == 'pI' .or. text(k:k+1) == 'PI') then
     text = text(1:k-1)//'3.14159'//text(k+2:ilength)
 	ilength = ilength + 5
 	item = 1
    end if
 
-   !converte vírgula em ponto, caso o usuário digite vírgula
+   !convert , to .
    if(text(k:k) == ',') then
     text = text(1:k-1)//'.'//text(k+1:ilength)
 	item = 1
    end if
 
   end do
- 
+
  end if
 
 
 
  if(ilength > 2) then
 
-   !penúltimo
+   !penultimate
    if(text((ilength-1):(ilength-1)) == '^') then
     text = text(1:ilength-2)//'**'//text(ilength:ilength)
 	item = 1
    end if
 
-   !penúltimo
+   !penultimate
    if(text((ilength-1):(ilength-1)) == ',') then
     text = text(1:ilength-2)//'.'//text(ilength:ilength)
 	item = 1
@@ -1414,13 +1416,13 @@ ilength = len(trim(text))
 
 
  if(ilength > 1) then
-  
-   !último
+
+   !last
    if(text((ilength):(ilength)) == ',') then
     text = text(1:ilength-1)//'.'
 	item = 1
    end if
- 
+
  end if
 
 if(item == 1) goto 10

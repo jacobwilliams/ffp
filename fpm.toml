@@ -1,0 +1,14 @@
+name = "ffp"
+description = "Fortran Function Parser"
+homepage = "https://github.com/jacobwilliams/ffp"
+
+[build]
+auto-executables = false
+auto-examples = false
+auto-tests = true
+
+[library]
+source-dir = "src"
+
+[install]
+library = true
